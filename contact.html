@@ -8,13 +8,37 @@
       content="Get in touch with Otic Solutions Pvt. Ltd. in Banasthali, Kathmandu for hearing inquiries and support."
     />
     <title>Contact Us | Otic Solutions Pvt. Ltd.</title>
-<link
+    <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     />
     <link rel="stylesheet" href="css/style.css" />
+    <style>
+      /* Mobile-Compact Responsive Map Wrapper */
+      .map-container {
+        position: relative;
+        width: 100%;
+        height: 320px; /* Default desktop/tablet height */
+        overflow: hidden;
+        border-radius: 8px;
+        margin-top: 1rem;
+      }
+
+      .map-container iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+      }
+
+      /* Compact adjustments for mobile screens */
+      @media (max-width: 768px) {
+        .map-container {
+          height: 240px; /* Reduced height for small mobile screens */
+        }
+      }
+    </style>
   </head>
   <body>
     <header class="header">
@@ -30,13 +54,14 @@
           <span></span>
         </button>
         <ul class="nav-menu" id="nav-menu">
-  <li><a href="index.html" class="nav-link">Home</a></li>
-  <li><a href="about.html" class="nav-link">About Us</a></li>
-  <li><a href="shop.html" class="nav-link">Shop</a></li>
-  <li><a href="contact.html" class="nav-link active">Contact</a></li>
-</ul>
+          <li><a href="index.html" class="nav-link">Home</a></li>
+          <li><a href="about.html" class="nav-link">About Us</a></li>
+          <li><a href="shop.html" class="nav-link">Shop</a></li>
+          <li><a href="contact.html" class="nav-link active">Contact</a></li>
+        </ul>
       </div>
     </header>
+
     <section class="page-header">
       <div class="container">
         <i class="fa-solid fa-headset"></i>
@@ -88,17 +113,21 @@
                     rel="noopener"
                     class="btn btn-secondary"
                     style="font-size: 0.9rem"
-                    ><i class="fa-brands fa-facebook-f"></i> Facebook Page</a
-                  >
+                    ><i class="fa-brands fa-facebook-f"></i> Facebook</a>
                   <a
                     href="https://www.instagram.com/oticsolutions2019/"
                     target="_blank"
                     rel="noopener"
                     class="btn btn-secondary"
                     style="font-size: 0.9rem"
-                    ><i class="fa-brands fa-instagram"></i> Instagram
-                    Profile</a
-                  >
+                    ><i class="fa-brands fa-instagram"></i> Instagram</a>
+                  <a
+                    href="https://wa.me/9779851255871"
+                    target="_blank"
+                    rel="noopener"
+                    class="btn btn-secondary"
+                    style="font-size: 0.9rem"
+                    ><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
                 </div>
               </div>
             </div>
@@ -106,15 +135,14 @@
             <div class="card">
               <h3><i class="fa-solid fa-map-location-dot" style="color: var(--primary)"></i> Our Location</h3>
               <p>Janajagriti Marg, Banasthali, Kathmandu</p>
-              <a
-                href="https://www.google.com/maps?q=27.7295791,85.2957551&amp;entry=gps&amp;shh=CAE&amp;lucs=,94297699,94231188,94280568,47071704,94218641,94282134,100813469,94286869,100820247,100822499&amp;g_ep=CAISEjI2LjMzLjEuOTYxODkxNDMyMBgAINeCAypdLDk0Mjk3Njk5LDk0MjMxMTg4LDk0MjgwNTY4LDQ3MDcxNzA0LDk0MjE4NjQxLDk0MjgyMTM0LDEwMDgxMzQ2OSw5NDI4Njg2OSwxMDA4MjAyNDcsMTAwODIyNDk5QgJOUA%3D%3D&amp;skid=ce437a2f-81d3-4d44-b01e-3b53014c74fe&amp;g_st=ic"
-                target="_blank"
-                rel="noopener"
-                class="btn btn-outline"
-                style="width: 100%; margin-top: 1rem"
-                ><i class="fa-solid fa-location-crosshairs"></i> View Our
-                Location on Google Maps</a
-              >
+              <div class="map-container">
+                <iframe
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3531.6024288573885!2d85.29571659999999!3d27.729559!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb19c42c99eeff%3A0x2d2d976134bfde73!2sOtic%20Solutions%20Pvt.%20Ltd.!5e0!3m2!1sen!2snp!4v1788274538569!5m2!1sen!2snp"
+                  allowfullscreen=""
+                  loading="lazy"
+                  referrerpolicy="strict-origin-when-cross-origin"
+                ></iframe>
+              </div>
             </div>
           </div>
 
@@ -184,70 +212,13 @@
                 class="btn btn-outline"
                 style="width: 100%; margin-top: 0.75rem; display: none"
               >
-                <i class="fa-solid fa-pen"></i> Edit &amp; Send Another Message
+                <i class="fa-solid fa-pen"></i> Edit & Send Another Message
               </button>
             </form>
           </div>
         </div>
       </div>
     </section>
-
-    <div class="modal-overlay" id="cart-modal">
-      <div class="modal-container">
-        <button class="modal-close" id="cart-close-btn">&times;</button>
-        <h2>Your Shopping Cart</h2>
-        <div id="cart-items-container" style="margin-top: 1rem"></div>
-        <div class="cart-summary">
-          <span>Total:</span>
-          <span id="cart-total-price">NPR 0</span>
-        </div>
-        <button
-          class="btn btn-primary"
-          id="checkout-btn"
-          style="width: 100%; margin-top: 1rem"
-        >
-          Proceed to Order
-        </button>
-
-        <div
-          id="checkout-form-container"
-          style="
-            display: none;
-            margin-top: 2rem;
-            border-top: 1px solid var(--border);
-            padding-top: 1rem;
-          "
-        >
-          <h3>Customer Details</h3>
-          <div id="order-alert"></div>
-          <form id="order-form">
-            <div class="form-group">
-              <label for="order-name">Full Name *</label>
-              <input type="text" id="order-name" required />
-            </div>
-            <div class="form-group">
-              <label for="order-phone">Phone Number *</label>
-              <input type="tel" id="order-phone" required />
-            </div>
-            <div class="form-group">
-              <label for="order-email">Email Address *</label>
-              <input type="email" id="order-email" required />
-            </div>
-            <div class="form-group">
-              <label for="order-address">Delivery Address *</label>
-              <input type="text" id="order-address" required />
-            </div>
-            <div class="form-group">
-              <label for="order-notes">Order Notes</label>
-              <textarea id="order-notes" rows="2"></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary" style="width: 100%">
-              Place Demo Order
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
 
     <footer class="footer">
       <div class="container">
@@ -274,6 +245,14 @@
                 class="social-btn"
                 aria-label="Instagram"
                 ><i class="fa-brands fa-instagram"></i
+              ></a>
+              <a
+                href="https://wa.me/9779851255871"
+                target="_blank"
+                rel="noopener"
+                class="social-btn"
+                aria-label="WhatsApp"
+                ><i class="fa-brands fa-whatsapp"></i
               ></a>
             </div>
           </div>
@@ -307,7 +286,7 @@
           </div>
         </div>
         <div class="footer-bottom">
-          <p>&copy; 2026 Otic Solutions Pvt. Ltd. All Rights Reserved.</p>
+          <p>© 2026 Otic Solutions Pvt. Ltd. All Rights Reserved.</p>
         </div>
       </div>
     </footer>
