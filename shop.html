@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Browse quality hearing aids, batteries, and maintenance accessories at Otic Solutions Pvt. Ltd."
+    />
+    <title>Shop Hearing Products | Otic Solutions Pvt. Ltd.</title>
+<link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+>
+  </head>
+  <body>
+    <header class="header">
+      <div class="container nav-container">
+        <a href="index.html" class="logo">Otic <span>Solutions</span></a>
+        <button
+          class="hamburger"
+          id="hamburger-btn"
+          aria-label="Toggle navigation"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <ul class="nav-menu" id="nav-menu">
+  <li><a href="index.html" class="nav-link">Home</a></li>
+  <li><a href="about.html" class="nav-link">About Us</a></li>
+  <li><a href="shop.html" class="nav-link active">Shop</a></li>
+  <li><a href="contact.html" class="nav-link">Contact</a></li>
+</ul>
+      </div>
+    </header>
+
+    <section class="section">
+      <div class="container">
+        <h1 class="section-title">Our Products</h1>
+        <p class="section-subtitle">
+          Browse quality hearing aids, replacement batteries, and care
+          accessories.
+        </p>
+
+        <div class="shop-controls">
+          <div class="search-bar">
+            <input
+              type="text"
+              id="search-input"
+              placeholder="Search products by name..."
+            />
+          </div>
+          <div class="filter-buttons">
+            <button class="filter-btn active" data-category="all">All</button>
+            <button class="filter-btn" data-category="hearing-aids">
+              Hearing Aids
+            </button>
+            <button class="filter-btn" data-category="accessories">
+              Accessories
+            </button>
+            <button class="filter-btn" data-category="batteries">
+              Batteries
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-3" id="shop-battery-container"></div>
+      </div>
+    </section>
+
+    <div class="modal-overlay" id="cart-modal">
+      <div class="modal-container">
+        <button class="modal-close" id="cart-close-btn">&times;</button>
+        <h2>Your Shopping Cart</h2>
+        <div id="cart-items-container" style="margin-top: 1rem"></div>
+        <div class="cart-summary">
+          <span>Total:</span>
+          <span id="cart-total-price">NPR 0</span>
+        </div>
+        <button
+          class="btn btn-primary"
+          id="checkout-btn"
+          style="width: 100%; margin-top: 1rem"
+        >
+          Proceed to Order
+        </button>
+
+        <div
+          id="checkout-form-container"
+          style="
+            display: none;
+            margin-top: 2rem;
+            border-top: 1px solid var(--border);
+            padding-top: 1rem;
+          "
+        >
+          <h3>Customer Details</h3>
+          <div id="order-alert"></div>
+          <form id="order-form">
+            <div class="form-group">
+              <label for="order-name">Full Name *</label>
+              <input type="text" id="order-name" required />
+            </div>
+            <div class="form-group">
+              <label for="order-phone">Phone Number *</label>
+              <input type="tel" id="order-phone" required />
+            </div>
+            <div class="form-group">
+              <label for="order-email">Email Address *</label>
+              <input type="email" id="order-email" required />
+            </div>
+            <div class="form-group">
+              <label for="order-address">Delivery Address *</label>
+              <input type="text" id="order-address" required />
+            </div>
+            <div class="form-group">
+              <label for="order-notes">Order Notes</label>
+              <textarea id="order-notes" rows="2"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%">
+              Place Demo Order
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Battery Order Modal (handled entirely by shop.js) -->
+    <div class="modal-overlay" id="order-modal">
+      <div class="modal-container order-modal-container">
+        <button
+          class="modal-close"
+          id="order-close-btn"
+          aria-label="Close order form"
+        >
+          &times;
+        </button>
+        <h2>Order Hearing Aid Batteries</h2>
+        <p class="section-subtitle" style="margin: 0.5rem 0 1.5rem; text-align: left; max-width: none">
+          Fill in your details below and we'll confirm your order by phone.
+        </p>
+
+        <div id="battery-order-alert" class="alert-message"></div>
+
+        <form id="battery-order-form" novalidate>
+          <div class="form-group">
+            <label for="buyer-name"><i class="fa-solid fa-user"></i> Full Name *</label>
+            <input type="text" id="buyer-name" placeholder="Your full name" />
+          </div>
+
+          <div class="form-group">
+            <label for="buyer-phone"><i class="fa-solid fa-phone"></i> Phone Number *</label>
+            <input type="tel" id="buyer-phone" placeholder="98XXXXXXXX" />
+          </div>
+
+          <div class="form-group">
+            <label for="battery-power"><i class="fa-solid fa-bolt"></i> Battery Power *</label>
+            <select id="battery-power">
+              <option value="" selected disabled>Select power</option>
+              <option value="10">10</option>
+              <option value="13">13</option>
+              <option value="312">312</option>
+              <option value="675">675</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label><i class="fa-solid fa-boxes-stacked"></i> Quantity *</label>
+            <div class="qty-selector">
+              <button type="button" class="qty-btn" id="order-qty-decrease" aria-label="Decrease quantity">&minus;</button>
+              <span id="order-qty-value">1</span>
+              <button type="button" class="qty-btn" id="order-qty-increase" aria-label="Increase quantity">+</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label><i class="fa-solid fa-truck-fast"></i> How would you like to receive your order? *</label>
+            <div class="option-toggle">
+              <label class="option-pill">
+                <input type="radio" name="receiving-method" value="delivery" checked /> Delivery
+              </label>
+              <label class="option-pill">
+                <input type="radio" name="receiving-method" value="visit" /> Visit Us
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group" id="delivery-location-group">
+            <label for="delivery-location"><i class="fa-solid fa-location-dot"></i> Delivery Location / Address *</label>
+            <input type="text" id="delivery-location" placeholder="Your delivery address" />
+          </div>
+
+          <p id="visit-us-note" class="alert-message alert-success">
+            You can visit Otic Solutions Pvt. Ltd. at Janajagriti Marg, Banasthali, Kathmandu, Nepal to collect your order.
+          </p>
+
+          <div class="form-group" id="payment-method-group">
+            <label><i class="fa-solid fa-credit-card"></i> How would you like to pay? *</label>
+            <div class="option-toggle">
+              <label class="option-pill">
+                <input type="radio" name="payment-method" value="online" checked /> Online Payment
+              </label>
+              <label class="option-pill">
+                <input type="radio" name="payment-method" value="cash" /> Cash
+              </label>
+            </div>
+          </div>
+
+          <div id="online-payment-group">
+            <p style="margin-bottom: 0.75rem">Please scan the QR code to make your payment.</p>
+            <img src="img/qr.png" alt="Payment QR Code" class="qr-image" />
+            <div class="form-group" style="margin-top: 1rem">
+              <label for="payment-reference"><i class="fa-solid fa-receipt"></i> Payment Reference / Transaction ID</label>
+              <input type="text" id="payment-reference" placeholder="Optional" />
+            </div>
+
+            <div class="form-group" id="payment-proof-group">
+              <label for="payment-screenshot"><i class="fa-solid fa-camera"></i> Proof of Payment (Screenshot) *</label>
+              <div class="file-upload-row">
+                <label for="payment-screenshot" class="btn btn-secondary file-upload-btn">
+                  <i class="fa-solid fa-upload"></i> Choose Screenshot
+                </label>
+                <span id="payment-screenshot-filename" class="file-upload-filename">No file selected</span>
+              </div>
+              <input
+                type="file"
+                id="payment-screenshot"
+                accept="image/*"
+                class="file-upload-input"
+              />
+              <div id="payment-screenshot-preview" class="payment-screenshot-preview">
+                <img id="payment-screenshot-preview-img" alt="Payment screenshot preview" />
+              </div>
+            </div>
+          </div>
+
+          <div class="order-summary-box" id="order-summary-box">
+            <h3>Order Summary</h3>
+            <div class="summary-row">
+              <span>Product:</span><span>Hearing Aid Batteries</span>
+            </div>
+            <div class="summary-row">
+              <span>Power:</span><span id="summary-power">&ndash;</span>
+            </div>
+            <div class="summary-row">
+              <span>Quantity:</span><span id="summary-quantity">1 pack</span>
+            </div>
+            <div class="summary-row">
+              <span>Price per Pack:</span><span>Rs. 250</span>
+            </div>
+            <div class="summary-row">
+              <span>Receiving Method:</span><span id="summary-receiving">Delivery</span>
+            </div>
+            <div class="summary-row" id="summary-location-row">
+              <span>Delivery Location:</span><span id="summary-location">&ndash;</span>
+            </div>
+            <div class="summary-row" id="summary-payment-row">
+              <span>Payment:</span><span id="summary-payment">Online Payment</span>
+            </div>
+            <div class="summary-row summary-total">
+              <span>Total:</span><span id="summary-total">Rs. 250</span>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="place-order-btn" style="width: 100%; margin-top: 1.5rem">
+            Place Order
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div>
+            <h3>Otic Solutions Pvt. Ltd.</h3>
+            <p>
+              Quality hearing solutions and customer-focused hearing care in
+              Kathmandu, Nepal.
+            </p>
+            <div class="social-links">
+              <a
+                href="https://www.facebook.com/oticonhearingaidnepal"
+                target="_blank"
+                rel="noopener"
+                class="social-btn"
+                aria-label="Facebook"
+                ><i class="fa-brands fa-facebook-f"></i
+              ></a>
+              <a
+                href="https://www.instagram.com/oticsolutions2019/"
+                target="_blank"
+                rel="noopener"
+                class="social-btn"
+                aria-label="Instagram"
+                ><i class="fa-brands fa-instagram"></i
+              ></a>
+            </div>
+          </div>
+          <div>
+            <h4>Quick Links</h4>
+            <ul class="footer-links">
+              <li><a href="index.html"><i class="fa-solid fa-chevron-right"></i> Home</a></li>
+              <li><a href="about.html"><i class="fa-solid fa-chevron-right"></i> About Us</a></li>
+              <li><a href="shop.html"><i class="fa-solid fa-chevron-right"></i> Shop</a></li>
+              <li><a href="contact.html"><i class="fa-solid fa-chevron-right"></i> Contact</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4>Contact Info</h4>
+            <p class="footer-contact-item">
+              <i class="fa-solid fa-location-dot"></i> <a href="https://maps.app.goo.gl/Ei35cJYQdCSMB6tg8" style="color: #94a3b8">Janajagriti Marg,
+              Banasthali, Kathmandu, Nepal</a>
+            </p>
+            <p class="footer-contact-item">
+              <i class="fa-solid fa-phone"></i>
+              <a href="tel:9851255871" style="color: #94a3b8">9851255871</a>
+            </p>
+            <p class="footer-contact-item">
+              <i class="fa-solid fa-envelope"></i>
+              <a
+                href="mailto:oticsolutions2019@gmail.com"
+                style="color: #94a3b8"
+                >oticsolutions2019@gmail.com</a
+              >
+            </p>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>&copy; 2026 Otic Solutions Pvt. Ltd. All Rights Reserved.</p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="js/script.js"></script>
+    <script src="js/shop.js" defer></script>
+  </body>
+</html>
