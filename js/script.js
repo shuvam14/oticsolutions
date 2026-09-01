@@ -3,6 +3,74 @@
    Handles Navigation, Shop rendering, Cart management, and Validation.
    ========================================================================== */
 
+/* ==========================================================================
+   0. GLOBAL LOADER + TOAST UTILITY
+   Shared across every page. Injects a full-screen loading overlay and a
+   toast container the first time they're needed, so shop.js / contact.js
+   can show a professional "processing" state during network requests
+   without duplicating this markup on every page.
+   ========================================================================== */
+const OticUI = (() => {
+  let overlay, textEl, toastContainer;
+  let loaderCount = 0;
+
+  function ensureNodes() {
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.className = "global-loader-overlay";
+      overlay.setAttribute("role", "status");
+      overlay.setAttribute("aria-live", "polite");
+      overlay.innerHTML =
+        '<div class="global-loader-spinner"></div><div class="global-loader-text">Loading...</div>';
+      document.body.appendChild(overlay);
+      textEl = overlay.querySelector(".global-loader-text");
+    }
+    if (!toastContainer) {
+      toastContainer = document.createElement("div");
+      toastContainer.className = "toast-container";
+      document.body.appendChild(toastContainer);
+    }
+  }
+
+  function showLoader(message) {
+    ensureNodes();
+    loaderCount += 1;
+    textEl.textContent = message || "Loading...";
+    overlay.classList.add("active");
+    // Safety net: never let the overlay stay stuck forever if a caller
+    // forgets to hide it (e.g. an unexpected thrown error before finally).
+    clearTimeout(overlay._safetyTimer);
+    overlay._safetyTimer = setTimeout(forceHideLoader, 20000);
+  }
+
+  // Reference-counted so nested show/hide calls never hide the loader early.
+  function hideLoader() {
+    if (!overlay) return;
+    loaderCount = Math.max(0, loaderCount - 1);
+    if (loaderCount === 0) overlay.classList.remove("active");
+  }
+
+  // Safety net: always available so a stuck loader can never trap the user.
+  function forceHideLoader() {
+    loaderCount = 0;
+    if (overlay) overlay.classList.remove("active");
+  }
+
+  function toast(message, type, duration) {
+    ensureNodes();
+    const el = document.createElement("div");
+    el.className = `toast toast-${type || "success"}`;
+    el.setAttribute("role", "alert");
+    el.textContent = message;
+    toastContainer.appendChild(el);
+    setTimeout(() => el.remove(), duration || 5000);
+  }
+
+  return { showLoader, hideLoader, forceHideLoader, toast };
+})();
+
+window.OticUI = OticUI;
+
 // Sample Product Database
 const productsData = [
   {
@@ -71,18 +139,24 @@ let cart = JSON.parse(localStorage.getItem("otic_cart")) || [];
 
 // DOM Content Loaded Initializer
 document.addEventListener("DOMContentLoaded", () => {
-  initNavigation();
-  updateCartBadge();
+  try {
+    initNavigation();
+    updateCartBadge();
 
-  // Dynamic page execution
-  if (document.getElementById("featured-products-container")) {
-    renderFeaturedProducts();
-  }
-  if (document.getElementById("shop-products-container")) {
-    initShopPage();
-  }
+    // Dynamic page execution
+    if (document.getElementById("featured-products-container")) {
+      renderFeaturedProducts();
+    }
+    if (document.getElementById("shop-products-container")) {
+      initShopPage();
+    }
 
-  initCartModal();
+    initCartModal();
+  } catch (err) {
+    // Defensive: a single unexpected error here should never take down
+    // navigation or the rest of the page's scripts.
+    console.error("Otic Solutions: page initialization error:", err);
+  }
 });
 
 /* 1. Mobile Navigation Toggle */

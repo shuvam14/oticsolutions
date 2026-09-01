@@ -35,12 +35,29 @@ function initContactForm() {
       return;
     }
 
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+      showAlert(alertBox, "error", "Please enter a valid email address.");
+      return;
+    }
+
+    const phoneDigits = phone.replace(/[^0-9]/g, "");
+    if (phoneDigits.length < 7 || phoneDigits.length > 15) {
+      showAlert(alertBox, "error", "Please enter a valid phone number.");
+      return;
+    }
+
     submitBtn.disabled = true;
     submitBtn.innerHTML =
       '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
     alertBox.style.display = "none";
+    if (window.OticUI) OticUI.showLoader("Sending your message...");
 
     try {
+      if (!navigator.onLine) {
+        throw new Error("offline");
+      }
+
       const response = await fetch(CONTACT_WEBHOOK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -95,15 +112,19 @@ function initContactForm() {
         "success",
         "Message sent! Thank you for contacting Otic Solutions Pvt. Ltd. — we will get back to you soon."
       );
+      if (window.OticUI) OticUI.toast("Your message has been sent successfully.", "success");
       lockForm();
     } catch (err) {
-      showAlert(
-        alertBox,
-        "error",
-        "Sorry, something went wrong while sending your message. Please try again or call us directly at 9851255871."
-      );
+      console.error("Otic Solutions: contact form submission failed:", err);
+      const message =
+        err && err.message === "offline"
+          ? "Unable to connect right now. Please check your internet connection and try again."
+          : "Something went wrong. Please try again or call us directly at 9851255871.";
+      showAlert(alertBox, "error", message);
       submitBtn.disabled = false;
       submitBtn.innerHTML = submitBtnDefaultHTML;
+    } finally {
+      if (window.OticUI) OticUI.hideLoader();
     }
   });
 

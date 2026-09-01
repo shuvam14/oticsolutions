@@ -203,22 +203,72 @@
 
           <div class="form-group" id="payment-method-group">
             <label><i class="fa-solid fa-credit-card"></i> How would you like to pay? *</label>
-            <div class="option-toggle">
-              <label class="option-pill">
-                <input type="radio" name="payment-method" value="online" checked /> Online Payment
+            <div class="payment-tabs" id="payment-tabs" role="radiogroup" aria-label="Payment method">
+              <label class="payment-tab">
+                <input type="radio" name="payment-method" value="fonepay" checked />
+                <i class="fa-solid fa-qrcode"></i>
+                <span>Fonepay</span>
               </label>
-              <label class="option-pill">
-                <input type="radio" name="payment-method" value="cash" /> Cash
+              <label class="payment-tab">
+                <input type="radio" name="payment-method" value="esewa" />
+                <i class="fa-solid fa-wallet"></i>
+                <span>eSewa</span>
+              </label>
+              <label class="payment-tab">
+                <input type="radio" name="payment-method" value="bank" />
+                <i class="fa-solid fa-building-columns"></i>
+                <span>Bank Transfer</span>
               </label>
             </div>
           </div>
 
           <div id="online-payment-group">
-            <p style="margin-bottom: 0.75rem">Please scan the QR code to make your payment.</p>
-            <img src="img/qr.png" alt="Payment QR Code" class="qr-image" />
+            <!-- Fonepay Panel -->
+            <div class="payment-method-panel" id="panel-fonepay">
+              <h4><i class="fa-solid fa-qrcode" style="color: var(--primary)"></i> Pay with Fonepay</h4>
+              <p>Scan the QR code below using your Fonepay app (or any Fonepay-linked mobile banking app) and complete the payment. After paying, enter your transaction/reference details below.</p>
+              <img src="img/fonepayqr.png" alt="Fonepay QR Code" class="qr-image" />
+              <div class="payment-manual-note">
+                <i class="fa-solid fa-circle-info"></i>
+                <span>Payment confirmation is manual — we will call you to confirm once your order is received.</span>
+              </div>
+            </div>
+
+            <!-- eSewa Panel -->
+            <div class="payment-method-panel" id="panel-esewa">
+              <h4><i class="fa-solid fa-wallet" style="color: var(--primary)"></i> Pay with eSewa</h4>
+              <p>Scan the QR code below using your eSewa app and complete the payment, or send it to the eSewa ID listed. Then enter your transaction/reference ID.</p>
+              <img src="img/esewaqr.png" alt="eSewa QR Code" class="qr-image" />
+              <ul class="payment-info-list" style="margin-top: 0.75rem">
+                <li><span>eSewa ID:</span><span>[YOUR ESEWA ID]</span></li>
+                <li><span>Account Name:</span><span>Otic Solutions Pvt. Ltd.</span></li>
+              </ul>
+              <div class="payment-manual-note">
+                <i class="fa-solid fa-circle-info"></i>
+                <span>Payment confirmation is manual — we will call you to confirm once your order is received.</span>
+              </div>
+            </div>
+
+            <!-- Bank Transfer Panel -->
+            <div class="payment-method-panel" id="panel-bank">
+              <h4><i class="fa-solid fa-building-columns" style="color: var(--primary)"></i> Pay by Bank Transfer</h4>
+              <p>Transfer the amount to the bank account below, or scan the bank QR code, then enter your transaction/reference details.</p>
+              <ul class="payment-info-list">
+                <li><span>Bank Name:</span><span>[YOUR BANK NAME]</span></li>
+                <li><span>Account Name:</span><span>[ACCOUNT NAME]</span></li>
+                <li><span>Account Number:</span><span>[ACCOUNT NUMBER]</span></li>
+                <li><span>Branch:</span><span>[BRANCH]</span></li>
+              </ul>
+              <img src="img/bankqr.png" alt="Bank Transfer QR Code" class="qr-image" style="margin-top: 0.75rem" />
+              <div class="payment-manual-note">
+                <i class="fa-solid fa-circle-info"></i>
+                <span>Payment confirmation is manual — we will call you to confirm once your order is received.</span>
+              </div>
+            </div>
+
             <div class="form-group" style="margin-top: 1rem">
-              <label for="payment-reference"><i class="fa-solid fa-receipt"></i> Payment Reference / Transaction ID</label>
-              <input type="text" id="payment-reference" placeholder="Optional" />
+              <label for="payment-reference"><i class="fa-solid fa-receipt"></i> Payment Reference / Transaction ID *</label>
+              <input type="text" id="payment-reference" placeholder="e.g. transaction ID from your payment app" />
             </div>
 
             <div class="form-group" id="payment-proof-group">
@@ -237,6 +287,7 @@
               />
               <div id="payment-screenshot-preview" class="payment-screenshot-preview">
                 <img id="payment-screenshot-preview-img" alt="Payment screenshot preview" />
+                <p id="payment-screenshot-ocr-status" class="ocr-status" role="status" aria-live="polite"></p>
               </div>
             </div>
           </div>
@@ -262,7 +313,7 @@
               <span>Delivery Location:</span><span id="summary-location">&ndash;</span>
             </div>
             <div class="summary-row" id="summary-payment-row">
-              <span>Payment:</span><span id="summary-payment">Online Payment</span>
+              <span>Payment Method:</span><span id="summary-payment">Fonepay</span>
             </div>
             <div class="summary-row summary-total">
               <span>Total:</span><span id="summary-total">Rs. 250</span>
@@ -340,6 +391,11 @@
     </footer>
 
     <script src="js/script.js"></script>
+    <!-- Tesseract.js: client-side OCR used to auto-check that the amount
+         visible in an uploaded payment screenshot matches the order total.
+         This is a soft, informational check for staff review — it never
+         blocks submission, since OCR can misread real screenshots. -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.4/dist/tesseract.min.js"></script>
     <script src="js/shop.js" defer></script>
   </body>
 </html>

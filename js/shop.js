@@ -30,6 +30,10 @@ const shopProducts = [
     description:
       "Reliable, long-lasting hearing aid batteries compatible with most digital hearing devices. Sold per pack.",
     powers: ["10", "13", "312", "675"],
+    // Availability drives the badge + whether "Buy Now" is enabled.
+    // Flip this to false (or add more products with available: false)
+    // to take an item off sale without removing it from the shop.
+    available: true,
   },
 ];
 
@@ -145,7 +149,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
   initSearchAndFilter();
   initOrderModal();
-  renderProducts();
+  initPaymentTabs();
+
+  // Brief skeleton state on first load so the shop never flashes an
+  // empty grid before content is ready (product data here is local and
+  // synchronous, but this keeps the UI consistent with how a real
+  // product feed would behave, and gives the layout a moment to settle).
+  productsContainer.innerHTML = skeletonMarkup(3);
+  try {
+    renderProducts();
+  } catch (err) {
+    console.error("Otic Solutions: failed to render shop products:", err);
+    productsContainer.innerHTML = `
+      <div style="grid-column: 1/-1; text-align: center; padding: 2rem;">
+        <p style="margin-bottom: 1rem;">Unable to load products. Please try again.</p>
+        <button type="button" class="btn btn-primary" id="shop-retry-btn">Retry</button>
+      </div>
+    `;
+    const retryBtn = document.getElementById("shop-retry-btn");
+    if (retryBtn) retryBtn.addEventListener("click", renderProducts);
+  }
 });
 
 // ==========================================================================
@@ -184,21 +207,29 @@ function renderProducts() {
 }
 
 function renderProductCard(product) {
+  const isAvailable = product.available !== false;
+  const badge = isAvailable
+    ? `<span class="availability-badge available">Available</span>`
+    : `<span class="availability-badge not-available">Not Available</span>`;
+
   return `
     <div class="product-card">
-      <img src="${product.image}" alt="${product.name}" class="product-img" />
+      <img src="${product.image}" alt="${escapeHtml(product.name)}" class="product-img" onerror="handleProductImageError(this)" />
       <div class="product-info">
-        <h3 class="product-title">${product.name}</h3>
-        <p class="product-desc">${product.description}</p>
-        <p class="battery-powers"><strong>Available Powers:</strong> ${product.powers.join(", ")}</p>
+        ${badge}
+        <h3 class="product-title">${escapeHtml(product.name)}</h3>
+        <p class="product-desc">${escapeHtml(product.description)}</p>
+        <p class="battery-powers"><strong>Available Powers:</strong> ${product.powers.map(escapeHtml).join(", ")}</p>
         <div class="product-bottom">
           <span class="product-price">Rs. ${product.price.toLocaleString()} / pack</span>
           <button
             type="button"
             class="btn btn-primary buy-now-btn"
             data-product-id="${product.id}"
+            ${isAvailable ? "" : "disabled"}
+            aria-disabled="${!isAvailable}"
           >
-            Buy Now
+            ${isAvailable ? "Buy Now" : "Not Available"}
           </button>
         </div>
       </div>
@@ -207,7 +238,50 @@ function renderProductCard(product) {
 }
 
 function emptyStateMarkup(message) {
-  return `<p style="grid-column: 1/-1; text-align: center; padding: 2rem;">${message}</p>`;
+  return `<p style="grid-column: 1/-1; text-align: center; padding: 2rem;">${escapeHtml(message)}</p>`;
+}
+
+function skeletonMarkup(count) {
+  return Array.from({ length: count || 3 })
+    .map(
+      () => `
+      <div class="skeleton-card">
+        <div class="skeleton-shimmer skeleton-img"></div>
+        <div class="skeleton-shimmer skeleton-line"></div>
+        <div class="skeleton-shimmer skeleton-line short"></div>
+      </div>
+    `,
+    )
+    .join("");
+}
+
+// Graceful fallback when a product image fails to load, instead of
+// showing the browser's broken-image icon.
+function handleProductImageError(imgEl) {
+  imgEl.onerror = null;
+  imgEl.style.display = "none";
+  const fallback = document.createElement("div");
+  fallback.className = "product-img";
+  fallback.style.display = "flex";
+  fallback.style.alignItems = "center";
+  fallback.style.justifyContent = "center";
+  fallback.style.color = "#94a3b8";
+  fallback.style.fontSize = "0.85rem";
+  fallback.textContent = "Image unavailable";
+  imgEl.insertAdjacentElement("afterend", fallback);
+}
+window.handleProductImageError = handleProductImageError;
+
+// Minimal HTML-escaping helper so product text is never inserted as raw
+// markup (defensive against XSS if product data ever comes from an
+// external source in future).
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 // ==========================================================================
@@ -249,9 +323,13 @@ function initSearchAndFilter() {
   // Delegate Buy Now clicks since product cards are re-rendered.
   productsContainer.addEventListener("click", (e) => {
     const buyBtn = e.target.closest(".buy-now-btn");
-    if (buyBtn) {
-      openOrderModal();
+    if (!buyBtn) return;
+    // Guard against unavailable products even if a disabled button is
+    // somehow still clickable (e.g. programmatic dispatch, older browsers).
+    if (buyBtn.disabled || buyBtn.getAttribute("aria-disabled") === "true") {
+      return;
     }
+    openOrderModal();
   });
 }
 
@@ -361,33 +439,63 @@ function updateReceivingMethodUI() {
 
 // ==========================================================================
 // PAYMENT
+// Three manual, phone-confirmed payment options: Fonepay, eSewa, and Bank
+// Transfer. All three follow the same flow: show instructions + QR/details,
+// customer pays externally, customer enters a transaction/reference ID and
+// (for delivery orders) uploads proof of payment, we confirm by phone.
 // ==========================================================================
+const PAYMENT_METHOD_LABELS = {
+  fonepay: "Fonepay",
+  esewa: "eSewa",
+  bank: "Bank Transfer",
+};
+
 function getPaymentMethod() {
   if (getReceivingMethod() !== "delivery") return null;
   const checked = document.querySelector(
     'input[name="payment-method"]:checked',
   );
-  return checked ? checked.value : "online";
+  return checked ? checked.value : "fonepay";
+}
+
+function initPaymentTabs() {
+  // Radio "change" handling for the payment tabs is already wired via
+  // paymentMethodRadios in initOrderModal(); this just renders the
+  // initial panel state on load.
+  updatePaymentMethodUI();
 }
 
 function updatePaymentMethodUI() {
   const method = getPaymentMethod();
-  onlinePaymentGroup.style.display = method === "online" ? "block" : "none";
+  const showOnline = method === "fonepay" || method === "esewa" || method === "bank";
+  onlinePaymentGroup.style.display = showOnline ? "block" : "none";
+
+  ["fonepay", "esewa", "bank"].forEach((key) => {
+    const panel = document.getElementById(`panel-${key}`);
+    if (panel) panel.classList.toggle("active", key === method);
+  });
 }
 
 function updatePaymentScreenshotPreview() {
   const file = paymentScreenshotInput.files[0];
 
+  // Reset OCR state on every new file selection.
+  lastOcrText = null;
+  ocrCheckToken += 1;
+
   if (!file) {
     paymentScreenshotFilename.textContent = "No file selected";
     paymentScreenshotPreview.classList.remove("visible");
     paymentScreenshotPreviewImg.src = "";
+    setOcrStatus("");
     return;
   }
 
   paymentScreenshotFilename.textContent = file.name;
   paymentScreenshotPreviewImg.src = URL.createObjectURL(file);
   paymentScreenshotPreview.classList.add("visible");
+
+  runOcrAmountCheck(file);
 }
 
 function resetPaymentScreenshot() {
@@ -395,6 +503,88 @@ function resetPaymentScreenshot() {
   paymentScreenshotFilename.textContent = "No file selected";
   paymentScreenshotPreview.classList.remove("visible");
   paymentScreenshotPreviewImg.src = "";
+  lastOcrText = null;
+  ocrCheckToken += 1;
+  setOcrStatus("");
+}
+
+// ==========================================================================
+// OCR AMOUNT CHECK (Tesseract.js)
+// Reads the uploaded payment screenshot and checks whether the current
+// order total appears in it. This is a soft, informational signal only:
+// OCR can misread a perfectly genuine screenshot (glare, cropping, fonts),
+// so a "not detected" result never blocks submission — it's surfaced to
+// your staff in the Discord order so they know to look a little closer
+// before confirming the order by phone.
+// ==========================================================================
+let lastOcrText = null; // cached recognized text for the current screenshot
+let ocrCheckToken = 0; // guards against a stale OCR result overwriting a newer one
+
+function setOcrStatus(message, state) {
+  const el = document.getElementById("payment-screenshot-ocr-status");
+  if (!el) return;
+  el.className = `ocr-status ${state || ""}`.trim();
+  el.textContent = message || "";
+}
+
+async function runOcrAmountCheck(file) {
+  const thisCheck = ocrCheckToken;
+
+  if (typeof Tesseract === "undefined") {
+    // OCR library failed to load (offline, blocked CDN, etc). Don't block
+    // the customer — just let staff know the check couldn't run.
+    setOcrStatus(
+      "Automatic amount check unavailable — our team will verify manually.",
+      "unavailable",
+    );
+    return;
+  }
+
+  setOcrStatus("Checking screenshot for the payment amount...", "checking");
+
+  try {
+    const result = await Tesseract.recognize(file, "eng");
+    if (thisCheck !== ocrCheckToken) return; // a newer file was selected meanwhile
+
+    lastOcrText = result && result.data ? result.data.text : "";
+    updateOcrMatchDisplay();
+  } catch (err) {
+    if (thisCheck !== ocrCheckToken) return;
+    console.error("Otic Solutions: OCR screenshot check failed:", err);
+    lastOcrText = null;
+    setOcrStatus(
+      "Automatic amount check unavailable — our team will verify manually.",
+      "unavailable",
+    );
+  }
+}
+
+// Re-derives the match against the *current* order total (quantity may
+// change after the screenshot was uploaded) without re-running OCR.
+function updateOcrMatchDisplay() {
+  if (lastOcrText === null) return; // nothing recognized yet, or check failed
+
+  const total = shopProducts[0].price * currentQuantity;
+  if (getOcrAmountMatchStatus() === "match") {
+    setOcrStatus(`Amount Rs. ${total.toLocaleString()} detected in screenshot.`, "match");
+  } else {
+    setOcrStatus(
+      `We couldn't confirm Rs. ${total.toLocaleString()} in your screenshot — our team will double-check manually.`,
+      "mismatch",
+    );
+  }
+}
+
+// Returns "match" | "mismatch" | "unchecked" for use in both the UI and
+// the Discord order notification.
+function getOcrAmountMatchStatus() {
+  if (lastOcrText === null) return "unchecked";
+  const total = shopProducts[0].price * currentQuantity;
+  const normalized = lastOcrText.replace(/,/g, "");
+  // Match the plain number (e.g. 500, 750) with optional decimals, as a
+  // standalone token so "500" doesn't false-match inside "45000".
+  const pattern = new RegExp(`(^|[^0-9])${total}(\\.0{1,2})?([^0-9]|$)`);
+  return pattern.test(normalized) ? "match" : "mismatch";
 }
 
 // ==========================================================================
@@ -417,11 +607,15 @@ function updateOrderSummary() {
     summaryLocation.textContent = deliveryLocationInput.value.trim() || "\u2013";
 
     summaryPaymentRow.style.display = "flex";
-    summaryPayment.textContent = payment === "online" ? "Online Payment" : "Cash";
+    summaryPayment.textContent = PAYMENT_METHOD_LABELS[payment] || "Fonepay";
   } else {
     summaryLocationRow.style.display = "none";
     summaryPaymentRow.style.display = "none";
   }
+
+  // Quantity changes the total, so re-check the cached OCR text against
+  // the new total (cheap — no re-scanning of the image required).
+  updateOcrMatchDisplay();
 }
 
 // ==========================================================================
@@ -457,12 +651,21 @@ function validateOrder() {
   if (method === "delivery" && !payment) {
     errors.push("Please select a payment method.");
   }
-  if (
-    method === "delivery" &&
-    payment === "online" &&
-    paymentScreenshotInput.files.length === 0
-  ) {
-    errors.push("Please upload a screenshot as proof of payment.");
+  if (method === "delivery" && payment) {
+    if (!paymentReferenceInput.value.trim()) {
+      errors.push("Please enter your payment reference / transaction ID.");
+    }
+    if (paymentScreenshotInput.files.length === 0) {
+      errors.push("Please upload a screenshot as proof of payment.");
+    } else {
+      const file = paymentScreenshotInput.files[0];
+      const maxSizeBytes = 8 * 1024 * 1024; // Discord webhook attachment limit
+      if (file.size > maxSizeBytes) {
+        errors.push(
+          "Your payment screenshot is too large (max 8MB). Please upload a smaller image.",
+        );
+      }
+    }
   }
 
   return errors;
@@ -518,11 +721,11 @@ async function sendOrderToDiscord(order, screenshotFile) {
     });
     fields.push({
       name: "> Payment Method",
-      value: `\`\`\`${order.paymentMethod === "online" ? "Online Payment" : "Cash"}\`\`\``,
+      value: `\`\`\`${PAYMENT_METHOD_LABELS[order.paymentMethod] || order.paymentMethod}\`\`\``,
       inline: true,
     });
 
-    if (order.paymentMethod === "online" && order.paymentReference) {
+    if (order.paymentReference) {
       fields.push({
         name: "> Payment Reference",
         value: `\`\`\`${order.paymentReference}\`\`\``,
@@ -597,7 +800,7 @@ async function handleOrderSubmit(e) {
 
   const screenshotFile =
     getReceivingMethod() === "delivery" &&
-    getPaymentMethod() === "online" &&
+    getPaymentMethod() &&
     paymentScreenshotInput.files.length > 0
       ? paymentScreenshotInput.files[0]
       : null;
@@ -611,10 +814,7 @@ async function handleOrderSubmit(e) {
     receivingMethod: getReceivingMethod(),
     location: deliveryLocationInput.value.trim(),
     paymentMethod: getPaymentMethod(),
-    paymentReference:
-      getReceivingMethod() === "delivery"
-        ? paymentReferenceInput.value.trim()
-        : "",
+    paymentReference: paymentReferenceInput.value.trim(),
     timestamp: new Date().toLocaleString("en-US", {
       dateStyle: "medium",
       timeStyle: "short",
@@ -623,32 +823,46 @@ async function handleOrderSubmit(e) {
 
   setSubmitting(true);
   hideAlert();
+  if (window.OticUI) OticUI.showLoader("Submitting your order...");
 
   try {
+    if (!navigator.onLine) {
+      throw new Error("offline");
+    }
+
     await sendOrderToDiscord(order, screenshotFile);
-    showAlert(
-      "Order Submitted Successfully! Thank you for your order. Your battery order has been received successfully. We will contact you using the phone number you provided to confirm the order and delivery/collection details.",
-      "success",
-    );
+
+    const confirmationMessage =
+      order.receivingMethod === "delivery"
+        ? "Order submitted! We've received your order and payment information. Payment confirmation is manual — we will call you at the number you provided to confirm your order and payment."
+        : "Order submitted! Thank you for your order. We will contact you using the phone number you provided to confirm the order and your visit details.";
+
+    showAlert(confirmationMessage, "success");
+    if (window.OticUI) OticUI.toast("Order submitted successfully.", "success");
     orderForm.reset();
     resetPaymentScreenshot();
     setTimeout(() => {
       closeOrderModal();
-    }, 4000);
+    }, 5000);
   } catch (error) {
     console.error("Failed to submit order to Discord:", error);
-    showAlert(
-      "Unable to submit your order right now. Please try again.",
-      "error",
-    );
+    const message =
+      error && error.message === "offline"
+        ? "Unable to connect right now. Please check your internet connection and try again."
+        : "We couldn't submit your order. Please try again, or call us directly at 9851255871.";
+    showAlert(message, "error");
   } finally {
     setSubmitting(false);
+    if (window.OticUI) OticUI.hideLoader();
   }
 }
 
 function setSubmitting(isSubmitting) {
   placeOrderBtn.disabled = isSubmitting;
-  placeOrderBtn.textContent = isSubmitting ? "Placing Order..." : "Place Order";
+  placeOrderBtn.setAttribute("aria-busy", String(isSubmitting));
+  placeOrderBtn.innerHTML = isSubmitting
+    ? '<i class="fa-solid fa-spinner fa-spin"></i> Placing Order...'
+    : "Place Order";
 }
 
 function showAlert(message, type) {
