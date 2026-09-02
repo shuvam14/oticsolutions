@@ -1,6 +1,7 @@
 /* ==========================================================================
    Otic Solutions Pvt. Ltd. - Main Stylesheet
    Theme: Oticon Magenta Palette (#C6168D)
+   Type: Poppins (headings) / Inter (body) — loaded via Google Fonts in <head>
    ========================================================================== */
 
 :root {
@@ -11,10 +12,12 @@
   --light-gray: #F5F5F5;
   --border: #e2e8f0;
   --slate: #333333;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-heading: "Poppins", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.12), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --radius: 8px;
-  --transition: all 0.3s ease;
+  --radius: 10px;
+  --transition: all 0.25s ease;
 }
 
 * {
@@ -23,14 +26,19 @@
   padding: 0;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-body);
   color: var(--slate);
   background-color: var(--light-gray);
-  line-height: 1.6;
+  line-height: 1.65;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
 a {
@@ -49,11 +57,23 @@ img {
   display: block;
 }
 
+/* Visible keyboard focus for accessibility */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
 /* Typography */
 h1, h2, h3, h4 {
+  font-family: var(--font-heading);
   color: var(--black);
   line-height: 1.25;
   margin-bottom: 0.75rem;
+  font-weight: 600;
 }
 
 p {
@@ -94,6 +114,7 @@ p {
   padding: 0.75rem 1.5rem;
   font-size: 1rem;
   font-weight: 600;
+  font-family: var(--font-heading);
   border-radius: var(--radius);
   border: 2px solid transparent;
   cursor: pointer;
@@ -104,11 +125,14 @@ p {
 .btn-primary {
   background-color: var(--primary);
   color: var(--white);
+  box-shadow: 0 4px 10px -2px rgba(198, 22, 141, 0.4);
 }
 
 .btn-primary:hover {
   background-color: var(--primary-dark);
   color: var(--white);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px -4px rgba(198, 22, 141, 0.45);
 }
 
 .btn-outline {
@@ -120,6 +144,7 @@ p {
 .btn-outline:hover {
   background-color: var(--primary);
   color: var(--white);
+  transform: translateY(-2px);
 }
 
 .btn-secondary {
@@ -150,8 +175,10 @@ p {
 }
 
 .logo {
-  font-size: 1.35rem;
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
   font-weight: 700;
+  letter-spacing: -0.01em;
   color: var(--primary);
   display: flex;
   align-items: center;
@@ -231,6 +258,19 @@ p {
   background-color: var(--black);
   border-radius: 2px;
   transition: var(--transition);
+  transform-origin: center;
+}
+
+.hamburger.active span:nth-child(1) {
+  transform: translateY(8px) rotate(45deg);
+}
+
+.hamburger.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.active span:nth-child(3) {
+  transform: translateY(-8px) rotate(-45deg);
 }
 
 /* Hero Section */
@@ -325,9 +365,16 @@ p {
 }
 
 .card-icon {
-  font-size: 2.5rem;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(198, 22, 141, 0.1);
+  font-size: 1.5rem;
   color: var(--primary);
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 /* Eyebrow / Kicker Label */
@@ -957,7 +1004,10 @@ p {
 }
 
 .social-links {
-  display: flex;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
   gap: 1rem;
   margin-top: 1rem;
 }
@@ -965,6 +1015,7 @@ p {
 .social-btn:hover {
   background-color: var(--primary);
   color: var(--white);
+  transform: translateY(-3px);
 }
 
 .footer-bottom {
@@ -1297,12 +1348,15 @@ p {
   }
 
   .social-links {
-    flex-direction: column;
-    align-items: stretch;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    justify-content: center !important;
+    align-items: center !important;
   }
 
-  .social-links .btn {
-    width: 100%;
+  .social-btn {
+    flex-shrink: 0;
   }
 
   .hero-buttons {
